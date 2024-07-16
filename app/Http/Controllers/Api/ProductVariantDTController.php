@@ -77,9 +77,9 @@ class ProductVariantDTController extends Controller
     {
         try {
             $data = $request->validate([
-                'product_variant_id' => ['required', 'integer'],
-                'productVariantDTName' => ['required', 'string', 'max:255'],
-                'productVariantPrice' => ['required', 'integer', 'min:3']
+                'product_variant_id' => ['sometimes', 'integer'],
+                'productVariantDTName' => ['sometimes', 'string', 'max:255'],
+                'productVariantPrice' => ['sometimes', 'integer', 'min:3']
             ]);
 
             $productVariantDT->update($data);

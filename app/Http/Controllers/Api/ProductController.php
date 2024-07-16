@@ -87,7 +87,7 @@ class ProductController extends Controller
                 'productName' => ['sometimes', 'string', 'max:255'],
                 'productImage' => ['sometimes', 'nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
                 'productDescription' => ['sometimes', 'string', 'max:65535'],
-                'productPrice' => ['required', 'number', 'max:100'],
+                'productPrice' => ['sometimes', 'number', 'max:100'],
             ]);
 
             if ($request->hasFile('productImage')) {

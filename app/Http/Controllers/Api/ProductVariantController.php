@@ -74,8 +74,8 @@ class ProductVariantController extends Controller
     {
         try {
             $data = $request->validate([
-                'product_id' => ['required', 'integer'],
-                'productName' => ['required', 'string', 'max:255'],
+                'product_id' => ['sometimes', 'integer'],
+                'productName' => ['sometimes', 'string', 'max:255'],
             ]);
 
             $productVariant->update($data);
