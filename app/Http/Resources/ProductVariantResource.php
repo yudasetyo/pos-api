@@ -18,7 +18,6 @@ class ProductVariantResource extends JsonResource
             'id' => $this->id,
             'product_id' => $this->product_id,
             'productVariantName' => $this->productVariantName,
-            'productVariantPrice' => $this->productVariantPrice,
             'deleted_at' =>  $this->deleted_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at

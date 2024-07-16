@@ -14,7 +14,6 @@ class ProductVariant extends Model
     protected $fillable = [
         'product_id',
         'productVariantName',
-        'productVariantPrice'
     ];
 
     public function product(): BelongsTo
