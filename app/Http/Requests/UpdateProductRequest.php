@@ -9,10 +9,10 @@ class UpdateProductRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize(): bool
-    {
-        return false;
-    }
+    // public function authorize(): bool
+    // {
+    //     return true;
+    // }
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,9 +22,9 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'productName' => ['sometimes', 'string', 'max:255'],
-            'productImage' => ['sometimes', 'nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
-            'productDescription' => ['sometimes', 'string', 'max:65535'],
+            'productName' => ['required', 'string', 'max:255'],
+            'productImage' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
+            'productDescription' => ['required', 'string', 'max:65535'],
             'productPrice' => ['required', 'number', 'max:100'],
         ];
     }

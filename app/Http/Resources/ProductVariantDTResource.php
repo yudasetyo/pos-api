@@ -14,6 +14,14 @@ class ProductVariantDTResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'product_variant_id' => $this->product_variant_id,
+            'productVariantDTName' => $this->productVariantDTName,
+            'productVariantDTPrice' => $this->productVariantDTPrice,
+            'deleted_at' => $this->deleted_at,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at
+        ];
     }
 }

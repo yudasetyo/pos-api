@@ -7,7 +7,7 @@ use App\Http\Resources\ProductVariantResource;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
-class ProductVarianController extends Controller
+class ProductVariantController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,18 +35,17 @@ class ProductVarianController extends Controller
             $data = $request->validate([
                 'product_id' => ['required', 'integer'],
                 'productName' => ['required', 'string', 'max:255'],
-                'productPrice' => ['required', 'string', 'max:100'],
             ]);
 
             $productVariant = ProductVariant::create($data);
 
             return response()->json([
-                'message' => 'Product Variant created successfully',
+                'message' => 'Product Variant label created successfully',
                 'data' => new ProductVariantResource($productVariant)
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to create product variant',
+                'message' => 'Failed to create product variant label',
                 'error' =>  $e->getMessage()
             ], 500);
         }
@@ -77,20 +76,19 @@ class ProductVarianController extends Controller
             $data = $request->validate([
                 'product_id' => ['required', 'integer'],
                 'productName' => ['required', 'string', 'max:255'],
-                'productPrice' => ['required', 'string', 'max:100'],
             ]);
 
             $productVariant->update($data);
 
             return response()->json([
-                'message' => 'Product variant updated successfully',
+                'message' => 'Product variant label updated successfully',
                 'data' => new ProductVariantResource($productVariant)
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to update product variant',
+                'message' => 'Failed to update product variant label',
                 'error' => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 
@@ -103,11 +101,11 @@ class ProductVarianController extends Controller
             $productVariant->delete();
 
             return response()->json([
-                'message' => 'Product variant deleted successfully'
+                'message' => 'Product variant label deleted successfully'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to delete product variant',
+                'message' => 'Failed to delete product variant label',
                 'error' => $e->getMessage()
             ], 500);
         }

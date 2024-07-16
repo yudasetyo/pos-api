@@ -39,7 +39,7 @@ class ProductController extends Controller
                 'productName' => ['required', 'string', 'max:255'],
                 'productImage' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
                 'productDescription' => ['required', 'string', 'max:65535'],
-                'productPrice' => ['required', 'string', 'max:100'],
+                'productPrice' => ['required', 'integer', 'min:3'],
             ]);
 
             if ($request->hasFile('productImage')) {
@@ -109,7 +109,7 @@ class ProductController extends Controller
             return response()->json([
                 'message' => 'Failed to update product',
                 'error' => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 
