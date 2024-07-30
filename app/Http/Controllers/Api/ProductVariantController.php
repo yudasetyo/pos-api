@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProductVariantRequest;
+use App\Http\Requests\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\ProductVariant;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductVariantController extends Controller
 {
@@ -29,20 +31,19 @@ class ProductVariantController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductVariantRequest $request)
     {
         try {
-            $data = $request->validate([
-                'product_id' => ['required', 'integer'],
-                'productName' => ['required', 'string', 'max:255'],
-            ]);
+            DB::transaction(function () use ($request) {
+                $data = $request->validated();
 
-            $productVariant = ProductVariant::create($data);
+                $productVariant = ProductVariant::create($data);
 
-            return response()->json([
-                'message' => 'Product Variant label created successfully',
-                'data' => new ProductVariantResource($productVariant)
-            ], 201);
+                return response()->json([
+                    'message' => 'Product Variant label created successfully',
+                    'data' => new ProductVariantResource($productVariant)
+                ], 201);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create product variant label',
@@ -70,20 +71,19 @@ class ProductVariantController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProductVariant $productVariant)
+    public function update(UpdateProductVariantRequest $request, ProductVariant $productVariant)
     {
         try {
-            $data = $request->validate([
-                'product_id' => ['sometimes', 'integer'],
-                'productName' => ['sometimes', 'string', 'max:255'],
-            ]);
+            DB::transaction(function () use ($request, $productVariant) {
+                $data = $request->validated();
 
-            $productVariant->update($data);
+                $productVariant->update($data);
 
-            return response()->json([
-                'message' => 'Product variant label updated successfully',
-                'data' => new ProductVariantResource($productVariant)
-            ], 200);
+                return response()->json([
+                    'message' => 'Product variant label updated successfully',
+                    'data' => new ProductVariantResource($productVariant)
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update product variant label',
@@ -98,11 +98,13 @@ class ProductVariantController extends Controller
     public function destroy(ProductVariant $productVariant)
     {
         try {
-            $productVariant->delete();
+            DB::transaction(function () use ($productVariant) {
+                $productVariant->delete();
 
-            return response()->json([
-                'message' => 'Product variant label deleted successfully'
-            ], 200);
+                return response()->json([
+                    'message' => 'Product variant label deleted successfully'
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete product variant label',

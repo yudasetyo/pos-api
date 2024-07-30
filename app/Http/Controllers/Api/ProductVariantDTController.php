@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProductVariantDTRequest;
+use App\Http\Requests\UpdateProductVariantDTRequest;
 use App\Http\Resources\ProductVariantDTResource;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\ProductVariantDT;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductVariantDTController extends Controller
 {
@@ -30,22 +33,20 @@ class ProductVariantDTController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductVariantDTRequest $request)
     {
         try {
-            $data = $request->validate([
-                'product_variant_id' => ['required', 'integer'],
-                'productVariantDTName' => ['required', 'string', 'max:255'],
-                'productVariantPrice' => ['required', 'integer', 'min:3']
-            ]);
+            DB::transaction(function () use ($request) {
+                $data = $request->validated();
 
-            $productVariantDT = ProductVariantDT::create($data);
+                $productVariantDT = ProductVariantDT::create($data);
 
-            return response()->json([
-                'message' => 'Product variant item created successfully',
-                'data' => new ProductVariantDTResource($productVariantDT
-                )
-            ], 201);
+                return response()->json([
+                    'message' => 'Product variant item created successfully',
+                    'data' => new ProductVariantDTResource($productVariantDT
+                    )
+                ], 201);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create product variant item',
@@ -73,21 +74,19 @@ class ProductVariantDTController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProductVariantDT $productVariantDT)
+    public function update(UpdateProductVariantDTRequest $request, ProductVariantDT $productVariantDT)
     {
         try {
-            $data = $request->validate([
-                'product_variant_id' => ['sometimes', 'integer'],
-                'productVariantDTName' => ['sometimes', 'string', 'max:255'],
-                'productVariantPrice' => ['sometimes', 'integer', 'min:3']
-            ]);
+            DB::transaction(function () use ($request, $productVariantDT) {
+                $data = $request->validated();
 
-            $productVariantDT->update($data);
+                $productVariantDT->update($data);
 
-            return response()->json([
-                'message' => 'Product variant item updated successfully',
-                'data' => new ProductVariantDTResource($productVariantDT)
-            ], 200);
+                return response()->json([
+                    'message' => 'Product variant item updated successfully',
+                    'data' => new ProductVariantDTResource($productVariantDT)
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update product variant item',
@@ -102,11 +101,13 @@ class ProductVariantDTController extends Controller
     public function destroy(ProductVariantDT $productVariantDT)
     {
         try {
-            $productVariantDT->delete();
+            DB::transaction(function () use ($productVariantDT) {
+                $productVariantDT->delete();
 
-            return response()->json([
-                'message' => 'Product variant item deleted successfully'
-            ], 200);
+                return response()->json([
+                    'message' => 'Product variant item deleted successfully'
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete product variant item',

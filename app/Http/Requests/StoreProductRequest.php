@@ -9,10 +9,10 @@ class StoreProductRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-    // public function authorize(): bool
-    // {
-    //     return true;
-    // }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -23,7 +23,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'productName' => ['required', 'string', 'max:255'],
-            'productImage' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
+            'productImage' => ['sometimes', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
             'productDescription' => ['required', 'string', 'max:65535'],
             'productPrice' => ['required', 'number', 'max:100'],
         ];

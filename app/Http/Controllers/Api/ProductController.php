@@ -7,7 +7,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -32,27 +32,24 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
         try {
-            $data = $request->validate([
-                'productName' => ['required', 'string', 'max:255'],
-                'productImage' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
-                'productDescription' => ['required', 'string', 'max:65535'],
-                'productPrice' => ['required', 'integer', 'min:3'],
-            ]);
+            DB::transaction(function () use ($request) {
+                $data = $request->validated();
 
-            if ($request->hasFile('productImage')) {
-                $imagePath = $request->file('productImage')->store('productImage', 'public');
-                $data['productImage'] = $imagePath;
-            }
+                if ($request->hasFile('productImage')) {
+                    $imagePath = $request->file('productImage')->store('productImage', 'public');
+                    $data['productImage'] = $imagePath;
+                }
 
-            $product = Product::create($data);
+                $product = Product::create($data);
 
-            return response()->json([
-                'message' => 'Product created successfully',
-                'data' => new ProductResource($product)
-            ], 201);
+                return response()->json([
+                    'message' => 'Product created successfully',
+                    'data' => new ProductResource($product)
+                ], 201);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create product',
@@ -80,31 +77,28 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
         try {
-            $data = $request->validate([
-                'productName' => ['sometimes', 'string', 'max:255'],
-                'productImage' => ['sometimes', 'nullable', 'image', 'mimes:png,jpg,jpeg,svg'],
-                'productDescription' => ['sometimes', 'string', 'max:65535'],
-                'productPrice' => ['sometimes', 'number', 'max:100'],
-            ]);
+            DB::transaction(function () use ($request, $product) {
+                $data = $request->validated();
 
-            if ($request->hasFile('productImage')) {
-                if ($product->productImage) {
-                    Storage::disk('public')->delete($product->productImage);
+                if ($request->hasFile('productImage')) {
+                    if ($product->productImage) {
+                        Storage::disk('public')->delete($product->productImage);
+                    }
+
+                    $imagePath = $request->file('productImage')->store('productImage', 'public');
+                    $data['productImage'] = $imagePath;
                 }
 
-                $imagePath = $request->file('productImage')->store('productImage', 'public');
-                $data['productImage'] = $imagePath;
-            }
+                $product->update($data);
 
-            $product->update($data);
-
-            return response()->json([
-                'message' => 'Product updated successfully',
-                'data' => new ProductResource($product)
-            ], 200);
+                return response()->json([
+                    'message' => 'Product updated successfully',
+                    'data' => new ProductResource($product)
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update product',
@@ -119,11 +113,13 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         try {
-            $product->delete();
+            DB::transaction(function () use ($product) {
+                $product->delete();
 
-            return response()->json([
-                'message' => 'Product deleted successfully'
-            ], 200);
+                return response()->json([
+                    'message' => 'Product deleted successfully'
+                ], 200);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete product',
