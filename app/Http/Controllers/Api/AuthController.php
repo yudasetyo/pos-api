@@ -48,7 +48,7 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function refresh() {
-        /* When access token will be expired, we are going to generate a new one wit this function 
+        /* When access token will be expired, we are going to generate a new one with this function 
         and return it here in response */
         return $this->respondWithToken(auth()->refresh());
     }
