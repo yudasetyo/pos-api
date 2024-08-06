@@ -34,17 +34,25 @@ class ProductVariantController extends Controller
     public function store(StoreProductVariantRequest $request)
     {
         try {
-            DB::transaction(function () use ($request) {
-                $data = $request->validated();
+            // Validate the request data
+            $data = $request->validated();
 
+            // Handle the database transaction
+            $response = DB::transaction(function () use ($data) {
+                // Create the product variant
                 $productVariant = ProductVariant::create($data);
 
+                // Return a successful response with the new product variant resource
                 return response()->json([
                     'message' => 'Product Variant label created successfully',
                     'data' => new ProductVariantResource($productVariant)
                 ], 201);
             });
+
+            // Return the response from the transaction
+            return $response;
         } catch (\Exception $e) {
+            // Return a failure response with the error message
             return response()->json([
                 'message' => 'Failed to create product variant label',
                 'error' =>  $e->getMessage()
@@ -74,17 +82,25 @@ class ProductVariantController extends Controller
     public function update(UpdateProductVariantRequest $request, ProductVariant $productVariant)
     {
         try {
-            DB::transaction(function () use ($request, $productVariant) {
-                $data = $request->validated();
+            // Validate the request data
+            $data = $request->validated();
 
+            // Handle the database transaction
+            $response = DB::transaction(function () use ($data, $productVariant) {
+                // Update the product variant
                 $productVariant->update($data);
 
+                // Return a successful response with the updated product variant resource
                 return response()->json([
                     'message' => 'Product variant label updated successfully',
                     'data' => new ProductVariantResource($productVariant)
                 ], 200);
             });
+
+            // Return the response from the transaction
+            return $response;
         } catch (\Exception $e) {
+            // Return a failure response with the error message
             return response()->json([
                 'message' => 'Failed to update product variant label',
                 'error' => $e->getMessage()
@@ -98,14 +114,21 @@ class ProductVariantController extends Controller
     public function destroy(ProductVariant $productVariant)
     {
         try {
-            DB::transaction(function () use ($productVariant) {
+            // Handle the database transaction
+            $response = DB::transaction(function () use ($productVariant) {
+                // Delete the product
                 $productVariant->delete();
 
+                // Return a successful response
                 return response()->json([
                     'message' => 'Product variant label deleted successfully'
                 ], 200);
             });
+
+            // Return the response from the transaction
+            return $response;
         } catch (\Exception $e) {
+            // Return a failure response with the error message
             return response()->json([
                 'message' => 'Failed to delete product variant label',
                 'error' => $e->getMessage()

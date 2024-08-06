@@ -24,7 +24,7 @@ class StoreProductVariantDTRequest extends FormRequest
         return [
             'product_variant_id' => ['required', 'integer'],
             'productVariantDTName' => ['required', 'string', 'max:255'],
-            'productVariantPrice' => ['required', 'integer', 'min:3']
+            'productVariantPrice' => ['required', 'integer']
         ];
     }
 }

@@ -18,7 +18,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function($router) {
     Route::post('me', [AuthController::class, 'me']);
 });
 
-Route::group(['middleware' => 'auth:api'], function() {
+Route::group(['middleware' => 'auth:api', 'prefix' => 'admin'], function() {
     Route::apiResource('products', ProductController::class);
     Route::apiResource('productVariants', ProductVariantController::class);
     Route::apiResource('productVariantDTs', ProductVariantDTController::class);

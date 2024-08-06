@@ -13,14 +13,27 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login() {
+    public function login(Request $request) {
         $credentials = request(['email', 'password']);
+        $isApi = $request->is('api/*');
 
-        if (!$token = auth('api')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if ($isApi) {
+            if (!$token = auth('api')->attempt($credentials)) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+    
+            return $this->respondWithToken($token);
+        } else {
+            if (Auth::attempt($credentials)) {
+                $request->session()->regenerate();
+                return redirect()->route('dashboard');
+            }
+
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records',
+            ]);
         }
-
-        return $this->respondWithToken($token);
+        
     }
 
     /**
@@ -28,8 +41,15 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function me() {
-        return response()->json(auth('api')->user());
+    public function me(Request $request) {
+        $isApi = $request->is('api/*');
+
+        if ($isApi) {
+            return response()->json(auth('api')->user());
+        } else {
+            return response()->json(Auth::user());
+        }
+        
     }
 
     /**
@@ -37,9 +57,19 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function logout() {
-        auth('api')->logout();
-        return response()->json(['message' => 'Successfully logged out']);
+    public function logout(Request $request) {
+        $isApi = $request->is('api/*');
+
+        if ($isApi) {
+            auth('api')->logout();
+            return response()->json(['message' => 'Successfully logged out']);
+        } else {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect('/');
+        }
+        
     }
 
     /**
@@ -47,10 +77,18 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function refresh() {
+    public function refresh(Request $request) {
+        $isApi = $request->is('api/*');
+        
         /* When access token will be expired, we are going to generate a new one wit this function 
         and return it here in response */
-        return $this->respondWithToken(auth()->refresh());
+        if ($isApi) {
+            return $this->respondWithToken(auth()->refresh());
+        } else {
+            // For web, we don't need to refresh as it uses session-based auth
+            return response()->json(['message' => 'Refresh not required for web sessions'], 400);
+        }
+        
     }
 
     /**

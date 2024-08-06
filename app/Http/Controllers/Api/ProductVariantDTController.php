@@ -36,18 +36,25 @@ class ProductVariantDTController extends Controller
     public function store(StoreProductVariantDTRequest $request)
     {
         try {
-            DB::transaction(function () use ($request) {
-                $data = $request->validated();
+            // Validate the request data
+            $data = $request->validated();
 
+            // Handle the database transaction
+            $response = DB::transaction(function () use ($data) {
+                // Create the product variant item
                 $productVariantDT = ProductVariantDT::create($data);
 
+                // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item created successfully',
-                    'data' => new ProductVariantDTResource($productVariantDT
-                    )
+                    'data' => new ProductVariantDTResource($productVariantDT)
                 ], 201);
             });
+
+            // Return the response from the transaction
+            return $response;
         } catch (\Exception $e) {
+            // Return a failure response with the error message
             return response()->json([
                 'message' => 'Failed to create product variant item',
                 'error' => $e->getMessage()
@@ -77,17 +84,25 @@ class ProductVariantDTController extends Controller
     public function update(UpdateProductVariantDTRequest $request, ProductVariantDT $productVariantDT)
     {
         try {
-            DB::transaction(function () use ($request, $productVariantDT) {
-                $data = $request->validated();
+            // Validate the request data
+            $data = $request->validated();
 
+            // Handle the database transaction
+            $response = DB::transaction(function () use ($productVariantDT, $data) {
+                // Update the product variant item
                 $productVariantDT->update($data);
 
+                // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item updated successfully',
                     'data' => new ProductVariantDTResource($productVariantDT)
                 ], 200);
             });
+
+            // Return the response from the transaction
+            return $response;
         } catch (\Exception $e) {
+            // Return a failure response with the error message
             return response()->json([
                 'message' => 'Failed to update product variant item',
                 'error' => $e->getMessage()
@@ -101,14 +116,21 @@ class ProductVariantDTController extends Controller
     public function destroy(ProductVariantDT $productVariantDT)
     {
         try {
-            DB::transaction(function () use ($productVariantDT) {
+            // Handle the database transaction
+            $response = DB::transaction(function () use ($productVariantDT) {
+                // Delete the product
                 $productVariantDT->delete();
 
+                // Return a successful response
                 return response()->json([
                     'message' => 'Product variant item deleted successfully'
                 ], 200);
             });
+
+            // Return the response from the transaction
+            return $response;
         } catch (\Exception $e) {
+            // Return a failure response with the error message
             return response()->json([
                 'message' => 'Failed to delete product variant item',
                 'error' => $e->getMessage()
