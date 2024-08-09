@@ -16,10 +16,17 @@ class ProductVariantDTController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $productVariantDTs = ProductVariantDT::latest()->paginate(10);
-        return ProductVariantDTResource::collection($productVariantDTs);
+        if ($request->is('api/*')) {
+            // API request
+            return ProductVariantDTResource::collection($productVariantDTs);
+        } else {
+            // Web request
+            return view('admin.productVariantDT.index', compact('productVariantDTs'));
+        }
+        
     }
 
     /**
@@ -27,7 +34,7 @@ class ProductVariantDTController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.productVariantDT.create');
     }
 
     /**
@@ -40,25 +47,34 @@ class ProductVariantDTController extends Controller
             $data = $request->validated();
 
             // Handle the database transaction
-            $response = DB::transaction(function () use ($data) {
+            $productVariantDT = DB::transaction(function () use ($request, $data) {
                 // Create the product variant item
-                $productVariantDT = ProductVariantDT::create($data);
+                return ProductVariantDT::create($data);
+            });
 
+            if ($request->is('api/*')) {
+                // API response
                 // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item created successfully',
                     'data' => new ProductVariantDTResource($productVariantDT)
                 ], 201);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                return redirect()->route('productVariantDTs.index')->with('success', 'Product variant item created successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to create product variant item',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to create product variant item',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Failed to create product variant item: ' . $e->getMessage());
+            }
         }
     }
 
@@ -75,7 +91,9 @@ class ProductVariantDTController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $productVariantDT = ProductVariantDT::findOrFail($id);
+
+        return view('admin.productVariantDT.edit', compact('productVariantDT'));
     }
 
     /**
@@ -88,53 +106,75 @@ class ProductVariantDTController extends Controller
             $data = $request->validated();
 
             // Handle the database transaction
-            $response = DB::transaction(function () use ($productVariantDT, $data) {
+            $updatedProductVariantDT = DB::transaction(function () use ($productVariantDT, $data) {
                 // Update the product variant item
                 $productVariantDT->update($data);
 
+                return $productVariantDT;                
+            });
+
+            if ($request->is('api/*')) {
+                // API response
                 // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item updated successfully',
-                    'data' => new ProductVariantDTResource($productVariantDT)
+                    'data' => new ProductVariantDTResource($updatedProductVariantDT)
                 ], 200);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                // Web response
+                return redirect()->route('productVariantDTs.index')
+                                 ->with('success', 'Product variant item updated successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to update product variant item',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to update product variant item',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Failed to update product variant item: ' . $e->getMessage());
+            }
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductVariantDT $productVariantDT)
+    public function destroy(Request $request, ProductVariantDT $productVariantDT)
     {
         try {
             // Handle the database transaction
             $response = DB::transaction(function () use ($productVariantDT) {
                 // Delete the product
                 $productVariantDT->delete();
+            });
 
-                // Return a successful response
+            if ($request->is('api/*')) {
+                // API response
                 return response()->json([
                     'message' => 'Product variant item deleted successfully'
                 ], 200);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                // Web response
+                return redirect()->route('productVariantDTs.index')
+                                 ->with('success', 'Product variant item deleted successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to delete product variant item',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to delete product variant item',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->with('error', 'Failed to delete product variant item: ' . $e->getMessage());
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProductVariantRequest;
 use App\Http\Requests\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\ProductVariant;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProductVariantController extends Controller
@@ -14,10 +15,18 @@ class ProductVariantController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $productVariants = ProductVariant::latest()->paginate(10);
-        return ProductVariantResource::collection($productVariants);
+        
+        if ($request->is('api/*')) {
+            // API request
+            return ProductVariantResource::collection($productVariants);
+        } else {
+            // Web request
+            return view('admin.productVariant.index', compact('productVariants'));
+        }
+        
     }
 
     /**
@@ -25,7 +34,7 @@ class ProductVariantController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.productVariant.create');
     }
 
     /**
@@ -38,25 +47,35 @@ class ProductVariantController extends Controller
             $data = $request->validated();
 
             // Handle the database transaction
-            $response = DB::transaction(function () use ($data) {
+            $productVariant = DB::transaction(function () use ($data) {
                 // Create the product variant
-                $productVariant = ProductVariant::create($data);
+                return ProductVariant::create($data);
+            });
 
+            if ($request->is('api/*')) {
+                // API response
                 // Return a successful response with the new product variant resource
                 return response()->json([
                     'message' => 'Product Variant label created successfully',
                     'data' => new ProductVariantResource($productVariant)
                 ], 201);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                return redirect()->route('productVariants.index')->with('success', 'Product variant label successfully');
+            }
+            
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to create product variant label',
-                'error' =>  $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to create product variant label',
+                    'error' =>  $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Failed to create product variant label: ' . $e->getMessage());
+            }
         }
     }
 
@@ -66,6 +85,7 @@ class ProductVariantController extends Controller
     public function show(ProductVariant $productVariant)
     {
         return new ProductVariantResource($productVariant);
+        
     }
 
     /**
@@ -73,7 +93,9 @@ class ProductVariantController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $productVariant = ProductVariant::findOrFail($id);
+
+        return view('admin.productVariant.edit', compact('productVariant'));
     }
 
     /**
@@ -86,53 +108,75 @@ class ProductVariantController extends Controller
             $data = $request->validated();
 
             // Handle the database transaction
-            $response = DB::transaction(function () use ($data, $productVariant) {
+            $updatedProductVariant = DB::transaction(function () use ($data, $productVariant) {
                 // Update the product variant
                 $productVariant->update($data);
 
+                return $productVariant;
+            });
+
+            if ($request->is('api/*')) {
                 // Return a successful response with the updated product variant resource
                 return response()->json([
                     'message' => 'Product variant label updated successfully',
-                    'data' => new ProductVariantResource($productVariant)
+                    'data' => new ProductVariantResource($updatedProductVariant)
                 ], 200);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                // Web response
+                return redirect()->route('productVariants.index')
+                                 ->with('success', 'Product variant label updated successfully');
+            }
         } catch (\Exception $e) {
             // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to update product variant label',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to update product variant label',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Failed to update product variant label: ' . $e->getMessage());
+            }
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductVariant $productVariant)
+    public function destroy(Request $request, ProductVariant $productVariant)
     {
         try {
             // Handle the database transaction
-            $response = DB::transaction(function () use ($productVariant) {
+            DB::transaction(function () use ($productVariant) {
                 // Delete the product
                 $productVariant->delete();
+            });
 
-                // Return a successful response
+            if ($request->is('api/*')) {
+                // API response
                 return response()->json([
                     'message' => 'Product variant label deleted successfully'
                 ], 200);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                // Web response
+                return redirect()->route('products.index')
+                                 ->with('success', 'Product deleted successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to delete product variant label',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to delete product variant label',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->with('error', 'Failed to delete product variant label: ' . $e->getMessage());
+            }
         }
     }
 }

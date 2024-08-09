@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,10 +16,18 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $products = Product::latest()->paginate(10);
-        return ProductResource::collection($products);
+
+        if ($request->is('api/*')) {
+            // API request
+            return ProductResource::collection($products);
+        } else {
+            // Web request
+            return view('admin.product.index', compact('products'));
+        }
+        
     }
 
     /**
@@ -26,7 +35,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.product.create');
     }
 
     /**
@@ -39,7 +48,7 @@ class ProductController extends Controller
             $data = $request->validated();
 
             // Handle the database transaction
-            $response = DB::transaction(function () use ($request, $data) {
+            $product = DB::transaction(function () use ($request, $data) {
                 // Process the product image if it exists
                 if ($request->hasFile('productImage')) {
                     $imagePath = $request->file('productImage')->store('productImage', 'public');
@@ -47,22 +56,33 @@ class ProductController extends Controller
                 }
     
                 // Create the product record
-                $product = Product::create($data);
-    
+                return Product::create($data);
+            });
+
+            // Determine if it's an API request
+            if ($request->is('api/*')) {
+                // API response
                 // Return a successful response with the product resource
                 return response()->json([
                     'message' => 'Product created successfully',
                     'data' => new ProductResource($product)
                 ], 201);
-            });
-    
-            return $response;
+            } else {
+                return redirect()->route('productWeb.index')->with('success', 'Product created successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to create product',
-                'error' =>  $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to create product',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Failed to create product: ' . $e->getMessage());
+            }
         }
     }
 
@@ -79,7 +99,9 @@ class ProductController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+
+        return view('admin.product.edit', compact('product'));
     }
 
     /**
@@ -88,69 +110,82 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         try {
-            // Validate the request data
             $data = $request->validated();
-
-            // Handle the database transaction
-            $response = DB::transaction(function () use ($request, $data, $product) {
-                // Check if a new product image is uploaded
+    
+            $updatedProduct = DB::transaction(function () use ($request, $data, $product) {
                 if ($request->hasFile('productImage')) {
-                    // Delete the old image if it exists
                     if ($product->productImage) {
                         Storage::disk('public')->delete($product->productImage);
                     }
-
-                    // Store the new image
                     $imagePath = $request->file('productImage')->store('productImage', 'public');
                     $data['productImage'] = $imagePath;
                 }
-
-                // Update the product record with the new data
+    
                 $product->update($data);
-
-                // Return a successful response with the updated product resource
+                return $product;
+            });
+    
+            if ($request->is('api/*')) {
+                // API response
+                // Return a successful response with the updated product variant resource
                 return response()->json([
                     'message' => 'Product updated successfully',
-                    'data' => new ProductResource($product)
+                    'data' => new ProductResource($updatedProduct)
                 ], 200);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                // Web response
+                return redirect()->route('productWeb.index')
+                                 ->with('success', 'Product updated successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to update product',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to update product',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Failed to update product: ' . $e->getMessage());
+            }
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
         try {
-            // Handle the database transaction
-            $response = DB::transaction(function () use ($product) {
+            DB::transaction(function () use ($product) {
                 // Delete the product
                 $product->delete();
-
-                // Return a successful response
+            });
+    
+            if ($request->is('api/*')) {
+                // API response
                 return response()->json([
                     'message' => 'Product deleted successfully'
                 ], 200);
-            });
-
-            // Return the response from the transaction
-            return $response;
+            } else {
+                // Web response
+                return redirect()->route('products.index')
+                                 ->with('success', 'Product deleted successfully');
+            }
         } catch (\Exception $e) {
-            // Return a failure response with the error message
-            return response()->json([
-                'message' => 'Failed to delete product',
-                'error' => $e->getMessage()
-            ], 500);
+            if ($request->is('api/*')) {
+                // API error response
+                return response()->json([
+                    'message' => 'Failed to delete product',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                // Web error response
+                return redirect()->back()
+                                 ->with('error', 'Failed to delete product: ' . $e->getMessage());
+            }
         }
     }
 }
