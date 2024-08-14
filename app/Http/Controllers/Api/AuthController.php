@@ -79,9 +79,6 @@ class AuthController extends Controller
      */
     public function refresh(Request $request) {
         $isApi = $request->is('api/*');
-        
-        /* When access token will be expired, we are going to generate a new one wit this function 
-    public function refresh() {
         /* When access token will be expired, we are going to generate a new one with this function 
         and return it here in response */
         if ($isApi) {

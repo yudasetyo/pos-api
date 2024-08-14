@@ -14,11 +14,29 @@ class ProductVariantDT extends Model
     protected $fillable = [
         'product_variant_id',
         'productVariantDTName',
-        'productVariantDTPrice'
+        'productVariantDTPrice',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     public function productVariant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function deleter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 }

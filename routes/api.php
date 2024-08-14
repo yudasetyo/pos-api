@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\ProductVariantDTController;
@@ -22,4 +23,5 @@ Route::group(['middleware' => 'auth:api', 'prefix' => 'admin'], function() {
     Route::apiResource('products', ProductController::class);
     Route::apiResource('productVariants', ProductVariantController::class);
     Route::apiResource('productVariantDTs', ProductVariantDTController::class);
+    Route::apiResource('productCategories', ProductCategoryController::class);
 });

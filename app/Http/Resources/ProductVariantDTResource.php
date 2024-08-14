@@ -16,6 +16,9 @@ class ProductVariantDTResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
+            'deleted_by' => $this->deleted_by,
             'product_variant_id' => $this->product_variant_id,
             'productVariantDTName' => $this->productVariantDTName,
             'productVariantDTPrice' => $this->productVariantDTPrice,

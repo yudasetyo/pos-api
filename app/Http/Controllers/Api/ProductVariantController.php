@@ -17,11 +17,13 @@ class ProductVariantController extends Controller
      */
     public function index(Request $request)
     {
-        $productVariants = ProductVariant::latest()->paginate(10);
+        $productVariants = ProductVariant::all();
         
         if ($request->is('api/*')) {
             // API request
-            return ProductVariantResource::collection($productVariants);
+            return response()->json([
+                'productVariants' => ProductVariantResource::collection($productVariants),
+            ]);
         } else {
             // Web request
             return view('admin.productVariant.index', compact('productVariants'));
@@ -57,7 +59,7 @@ class ProductVariantController extends Controller
                 // Return a successful response with the new product variant resource
                 return response()->json([
                     'message' => 'Product Variant label created successfully',
-                    'data' => new ProductVariantResource($productVariant)
+                    'productVariants' => new ProductVariantResource($productVariant)
                 ], 201);
             } else {
                 return redirect()->route('productVariants.index')->with('success', 'Product variant label successfully');
@@ -116,10 +118,11 @@ class ProductVariantController extends Controller
             });
 
             if ($request->is('api/*')) {
+                // API response
                 // Return a successful response with the updated product variant resource
                 return response()->json([
                     'message' => 'Product variant label updated successfully',
-                    'data' => new ProductVariantResource($updatedProductVariant)
+                    'productVariants' => new ProductVariantResource($updatedProductVariant)
                 ], 200);
             } else {
                 // Web response
@@ -151,7 +154,7 @@ class ProductVariantController extends Controller
         try {
             // Handle the database transaction
             DB::transaction(function () use ($productVariant) {
-                // Delete the product
+                // Delete the product variant
                 $productVariant->delete();
             });
 
@@ -163,7 +166,7 @@ class ProductVariantController extends Controller
             } else {
                 // Web response
                 return redirect()->route('products.index')
-                                 ->with('success', 'Product deleted successfully');
+                                 ->with('success', 'Product variant label deleted successfully');
             }
         } catch (\Exception $e) {
             if ($request->is('api/*')) {

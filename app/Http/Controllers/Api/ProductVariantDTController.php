@@ -18,10 +18,12 @@ class ProductVariantDTController extends Controller
      */
     public function index(Request $request)
     {
-        $productVariantDTs = ProductVariantDT::latest()->paginate(10);
+        $productVariantDTs = ProductVariantDT::all();
         if ($request->is('api/*')) {
             // API request
-            return ProductVariantDTResource::collection($productVariantDTs);
+            return response()->json([
+                'productVariantDTs' => ProductVariantDTResource::collection($productVariantDTs),
+            ]);
         } else {
             // Web request
             return view('admin.productVariantDT.index', compact('productVariantDTs'));
@@ -57,7 +59,7 @@ class ProductVariantDTController extends Controller
                 // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item created successfully',
-                    'data' => new ProductVariantDTResource($productVariantDT)
+                    'productVariantDTs' => new ProductVariantDTResource($productVariantDT)
                 ], 201);
             } else {
                 return redirect()->route('productVariantDTs.index')->with('success', 'Product variant item created successfully');
@@ -118,7 +120,7 @@ class ProductVariantDTController extends Controller
                 // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item updated successfully',
-                    'data' => new ProductVariantDTResource($updatedProductVariantDT)
+                    'productVariantDTs' => new ProductVariantDTResource($updatedProductVariantDT)
                 ], 200);
             } else {
                 // Web response

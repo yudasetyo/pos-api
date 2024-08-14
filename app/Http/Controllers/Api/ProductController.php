@@ -18,16 +18,17 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::latest()->paginate(10);
+        $products = Product::all();
 
         if ($request->is('api/*')) {
             // API request
-            return ProductResource::collection($products);
+            return response()->json([
+                'products' => ProductResource::collection($products),
+            ]);
         } else {
             // Web request
             return view('admin.product.index', compact('products'));
         }
-        
     }
 
     /**
@@ -65,7 +66,7 @@ class ProductController extends Controller
                 // Return a successful response with the product resource
                 return response()->json([
                     'message' => 'Product created successfully',
-                    'data' => new ProductResource($product)
+                    'products' => new ProductResource($product)
                 ], 201);
             } else {
                 return redirect()->route('productWeb.index')->with('success', 'Product created successfully');
@@ -127,10 +128,10 @@ class ProductController extends Controller
     
             if ($request->is('api/*')) {
                 // API response
-                // Return a successful response with the updated product variant resource
+                // Return a successful response with the updated product resource
                 return response()->json([
                     'message' => 'Product updated successfully',
-                    'data' => new ProductResource($updatedProduct)
+                    'products' => new ProductResource($updatedProduct)
                 ], 200);
             } else {
                 // Web response
