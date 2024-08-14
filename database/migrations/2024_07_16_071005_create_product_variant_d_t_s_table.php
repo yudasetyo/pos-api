@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('product_variant_d_t_s', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('productVariantDTName');
             $table->integer('productVariantDTPrice');
             $table->softDeletes();
