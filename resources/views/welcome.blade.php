@@ -66,7 +66,3 @@
         </table>
     </div>
 @endsection
-
-@push('after-scripts')
-    <script src="./node_modules/flowbite/dist/flowbite.min.js"></script>
-@endpush
