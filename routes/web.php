@@ -5,14 +5,12 @@ use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\ProductVariantDTController;
-use App\Models\ProductVariant;
-use App\Models\ProductVariantDT;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', function () {
-    return view('home');
-})->name('home');
+    return view('auth.login');
+})->name('login');
 
 // Authentication routes
 Route::controller(AuthController::class)->group(function () {
