@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -18,14 +19,14 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::all();
-
         if ($request->is('api/*')) {
+            $products = Product::all();
             // API request
             return response()->json([
                 'products' => ProductResource::collection($products),
             ]);
         } else {
+            $products = Product::paginate(10);
             // Web request
             return view('admin.product.index', compact('products'));
         }
@@ -36,7 +37,8 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('admin.product.create');
+        $categories = ProductCategory::all();
+        return view('admin.product.create', compact('categories'));
     }
 
     /**
@@ -52,7 +54,7 @@ class ProductController extends Controller
             $product = DB::transaction(function () use ($request, $data) {
                 // Process the product image if it exists
                 if ($request->hasFile('productImage')) {
-                    $imagePath = $request->file('productImage')->store('productImage', 'public');
+                    $imagePath = $request->file('productImage')->store('productImages', 'public');
                     $data['productImage'] = $imagePath;
                 }
     
@@ -69,7 +71,7 @@ class ProductController extends Controller
                     'products' => new ProductResource($product)
                 ], 201);
             } else {
-                return redirect()->route('productWeb.index')->with('success', 'Product created successfully');
+                return redirect()->route('product.index')->with('success', 'Product created successfully');
             }
         } catch (\Exception $e) {
             if ($request->is('api/*')) {
@@ -101,8 +103,9 @@ class ProductController extends Controller
     public function edit(string $id)
     {
         $product = Product::findOrFail($id);
+        $categories = ProductCategory::all();
 
-        return view('admin.product.edit', compact('product'));
+        return view('admin.product.edit', compact('product', 'categories'));
     }
 
     /**
@@ -118,7 +121,7 @@ class ProductController extends Controller
                     if ($product->productImage) {
                         Storage::disk('public')->delete($product->productImage);
                     }
-                    $imagePath = $request->file('productImage')->store('productImage', 'public');
+                    $imagePath = $request->file('productImage')->store('productImages', 'public');
                     $data['productImage'] = $imagePath;
                 }
     
@@ -135,7 +138,7 @@ class ProductController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('productWeb.index')
+                return redirect()->route('product.index')
                                  ->with('success', 'Product updated successfully');
             }
         } catch (\Exception $e) {
@@ -172,7 +175,7 @@ class ProductController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('products.index')
+                return redirect()->route('product.index')
                                  ->with('success', 'Product deleted successfully');
             }
         } catch (\Exception $e) {

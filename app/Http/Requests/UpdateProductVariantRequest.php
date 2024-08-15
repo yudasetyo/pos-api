@@ -23,7 +23,8 @@ class UpdateProductVariantRequest extends FormRequest
     {
         return [
             'product_id' => ['sometimes', 'integer'],
-            'productName' => ['sometimes', 'string', 'max:255'],
+            'productVariantName' => ['sometimes', 'string', 'max:255'],
+            'isRequired' => ['sometimes', 'boolean'],
         ];
     }
 }

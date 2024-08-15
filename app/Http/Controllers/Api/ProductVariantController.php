@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductVariantRequest;
 use App\Http\Requests\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,15 +18,15 @@ class ProductVariantController extends Controller
      */
     public function index(Request $request)
     {
-        $productVariants = ProductVariant::all();
-        
         if ($request->is('api/*')) {
             // API request
+            $productVariants = ProductVariant::all();
             return response()->json([
                 'productVariants' => ProductVariantResource::collection($productVariants),
             ]);
         } else {
             // Web request
+            $productVariants = ProductVariant::paginate(10);
             return view('admin.productVariant.index', compact('productVariants'));
         }
         
@@ -36,7 +37,9 @@ class ProductVariantController extends Controller
      */
     public function create()
     {
-        return view('admin.productVariant.create');
+        $products = Product::all();
+
+        return view('admin.productVariant.create', compact('products'));
     }
 
     /**
@@ -47,6 +50,9 @@ class ProductVariantController extends Controller
         try {
             // Validate the request data
             $data = $request->validated();
+
+            // Capture the isActive checkbox value and default it to false if not present
+            $data['isRequired'] = $request->input('isRequired') == '1';
 
             // Handle the database transaction
             $productVariant = DB::transaction(function () use ($data) {
@@ -62,7 +68,7 @@ class ProductVariantController extends Controller
                     'productVariants' => new ProductVariantResource($productVariant)
                 ], 201);
             } else {
-                return redirect()->route('productVariants.index')->with('success', 'Product variant label successfully');
+                return redirect()->route('productVariant.index')->with('success', 'Product variant label successfully');
             }
             
         } catch (\Exception $e) {
@@ -96,8 +102,9 @@ class ProductVariantController extends Controller
     public function edit(string $id)
     {
         $productVariant = ProductVariant::findOrFail($id);
+        $products = Product::all();
 
-        return view('admin.productVariant.edit', compact('productVariant'));
+        return view('admin.productVariant.edit', compact('productVariant', 'products'));
     }
 
     /**
@@ -108,6 +115,9 @@ class ProductVariantController extends Controller
         try {
             // Validate the request data
             $data = $request->validated();
+
+            // Capture the isActive checkbox value and default it to false if not present
+            $data['isRequired'] = $request->input('isRequired') == '1';
 
             // Handle the database transaction
             $updatedProductVariant = DB::transaction(function () use ($data, $productVariant) {
@@ -126,7 +136,7 @@ class ProductVariantController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('productVariants.index')
+                return redirect()->route('productVariant.index')
                                  ->with('success', 'Product variant label updated successfully');
             }
         } catch (\Exception $e) {
@@ -165,7 +175,7 @@ class ProductVariantController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('products.index')
+                return redirect()->route('productVariant.index')
                                  ->with('success', 'Product variant label deleted successfully');
             }
         } catch (\Exception $e) {

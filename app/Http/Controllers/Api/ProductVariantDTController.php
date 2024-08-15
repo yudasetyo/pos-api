@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProductVariantDTRequest;
 use App\Http\Requests\UpdateProductVariantDTRequest;
 use App\Http\Resources\ProductVariantDTResource;
 use App\Http\Resources\ProductVariantResource;
+use App\Models\ProductVariant;
 use App\Models\ProductVariantDT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,14 +19,15 @@ class ProductVariantDTController extends Controller
      */
     public function index(Request $request)
     {
-        $productVariantDTs = ProductVariantDT::all();
         if ($request->is('api/*')) {
             // API request
+            $productVariantDTs = ProductVariantDT::all();
             return response()->json([
                 'productVariantDTs' => ProductVariantDTResource::collection($productVariantDTs),
             ]);
         } else {
             // Web request
+            $productVariantDTs = ProductVariantDT::paginate(10);
             return view('admin.productVariantDT.index', compact('productVariantDTs'));
         }
         
@@ -36,7 +38,8 @@ class ProductVariantDTController extends Controller
      */
     public function create()
     {
-        return view('admin.productVariantDT.create');
+        $productVariants = ProductVariant::all();
+        return view('admin.productVariantDT.create', compact('productVariants'));
     }
 
     /**
@@ -49,7 +52,7 @@ class ProductVariantDTController extends Controller
             $data = $request->validated();
 
             // Handle the database transaction
-            $productVariantDT = DB::transaction(function () use ($request, $data) {
+            $productVariantDT = DB::transaction(function () use ($data) {
                 // Create the product variant item
                 return ProductVariantDT::create($data);
             });
@@ -59,10 +62,10 @@ class ProductVariantDTController extends Controller
                 // Return a successful response with the new product variant item resource
                 return response()->json([
                     'message' => 'Product variant item created successfully',
-                    'productVariantDTs' => new ProductVariantDTResource($productVariantDT)
+                    'productVariantDT' => new ProductVariantDTResource($productVariantDT)
                 ], 201);
             } else {
-                return redirect()->route('productVariantDTs.index')->with('success', 'Product variant item created successfully');
+                return redirect()->route('productVariantDT.index')->with('success', 'Product variant item created successfully');
             }
         } catch (\Exception $e) {
             if ($request->is('api/*')) {
@@ -94,8 +97,9 @@ class ProductVariantDTController extends Controller
     public function edit(string $id)
     {
         $productVariantDT = ProductVariantDT::findOrFail($id);
+        $productVariants = ProductVariant::all();
 
-        return view('admin.productVariantDT.edit', compact('productVariantDT'));
+        return view('admin.productVariantDT.edit', compact('productVariantDT', 'productVariants'));
     }
 
     /**
@@ -124,7 +128,7 @@ class ProductVariantDTController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('productVariantDTs.index')
+                return redirect()->route('productVariantDT.index')
                                  ->with('success', 'Product variant item updated successfully');
             }
         } catch (\Exception $e) {
@@ -162,7 +166,7 @@ class ProductVariantDTController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('productVariantDTs.index')
+                return redirect()->route('productVariantDT.index')
                                  ->with('success', 'Product variant item deleted successfully');
             }
         } catch (\Exception $e) {

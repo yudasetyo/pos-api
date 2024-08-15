@@ -23,7 +23,8 @@ class StoreProductVariantRequest extends FormRequest
     {
         return [
             'product_id' => ['required', 'integer'],
-            'productName' => ['required', 'string', 'max:255'],
+            'productVariantName' => ['required', 'string', 'max:255'],
+            'isRequired' => ['required', 'boolean'],
         ];
     }
 }

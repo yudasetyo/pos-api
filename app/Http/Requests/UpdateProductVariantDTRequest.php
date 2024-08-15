@@ -24,7 +24,7 @@ class UpdateProductVariantDTRequest extends FormRequest
         return [
             'product_variant_id' => ['sometimes', 'integer'],
             'productVariantDTName' => ['sometimes', 'string', 'max:255'],
-            'productVariantPrice' => ['sometimes', 'integer']
+            'productVariantDTPrice' => ['sometimes', 'integer']
         ];
     }
 }

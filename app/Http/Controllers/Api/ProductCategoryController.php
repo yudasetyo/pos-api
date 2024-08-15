@@ -17,14 +17,14 @@ class ProductCategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $productCategories = ProductCategory::all();
-
         if ($request->is('api/*')) {
+            $productCategories = ProductCategory::all();
             // API request
             return response()->json([
                 'productCategories' => ProductCategoryResource::collection($productCategories),
             ]);
         } else {
+            $productCategories = ProductCategory::paginate(10);
             // Web request
             return view('admin.productCategory.index', compact('productCategories'));
         }
@@ -61,7 +61,7 @@ class ProductCategoryController extends Controller
                     'productCategory' => new ProductCategoryResource($productCategory)
                 ], 201);
             } else {
-                return redirect()->route('productCategoryWeb.index')->with('success', 'Product category successfully');
+                return redirect()->route('productCategory.index')->with('success', 'Product category successfully');
             }
             
         } catch (\Exception $e) {
@@ -122,7 +122,7 @@ class ProductCategoryController extends Controller
                 ], 200);
             } else {
                 // Web response
-                return redirect()->route('productCategoryWeb.index')
+                return redirect()->route('productCategory.index')
                                  ->with('success', 'Product category updated successfully');
             }
         } catch (\Exception $e) {
